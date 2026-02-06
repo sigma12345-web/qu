@@ -1,0 +1,121 @@
+name: Build Atom AI Assistant
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Create Build Directory
+      run: |
+        mkdir build
+        copy server.ps1 build\
+        copy в.bat build\
+        copy index.html build\
+        
+    - name: Create Setup Script
+      run: |
+        @echo off
+        echo Creating setup script...
+        
+        echo @echo off > build\setup.bat
+        echo echo ========================================= >> build\setup.bat
+        echo echo      ATOM AI ASSISTANT SETUP             >> build\setup.bat
+        echo echo ========================================= >> build\setup.bat
+        echo echo. >> build\setup.bat
+        echo echo This will set up Atom AI Assistant on your system >> build\setup.bat
+        echo echo. >> build\setup.bat
+        echo pause >> build\setup.bat
+        echo echo. >> build\setup.bat
+        echo echo Creating launcher... >> build\setup.bat
+        echo echo @echo off > build\launch.bat >> build\setup.bat
+        echo echo echo Starting Atom AI Assistant... >> build\launch.bat >> build\setup.bat
+        echo echo start http://localhost:8000 >> build\launch.bat >> build\setup.bat
+        echo echo powershell -ExecutionPolicy Bypass -File "server.ps1" >> build\launch.bat >> build\setup.bat
+        echo echo Creating desktop shortcut... >> build\setup.bat
+        echo echo [InternetShortcut] > "%USERPROFILE%\Desktop\Atom AI Assistant.url" >> build\setup.bat
+        echo echo URL=file:///%%USERPROFILE%%\Desktop\Atom AI Assistant >> build\setup.bat
+        echo echo IconIndex=0 >> build\setup.bat
+        echo echo IconFile=C:\Windows\System32\SHELL32.dll >> build\setup.bat
+        echo echo. >> build\setup.bat
+        echo echo Setup complete! >> build\setup.bat
+        echo echo. >> build\setup.bat
+        echo echo To start Atom AI Assistant: >> build\setup.bat
+        echo echo 1. Double-click launch.bat in the build folder >> build\setup.bat
+        echo echo 2. Or use the desktop shortcut >> build\setup.bat
+        echo echo. >> build\setup.bat
+        echo pause >> build\setup.bat
+        
+    - name: Create README
+      run: |
+        echo # Atom AI Assistant > build\README.md
+        echo. >> build\README.md
+        echo ## Description >> build\README.md
+        echo Local AI assistant with web interface using Ollama >> build\README.md
+        echo. >> build\README.md
+        echo ## Requirements >> build\README.md
+        echo 1. Install Ollama from https://ollama.com >> build\README.md
+        echo 2. Download AI model: >> build\README.md
+        echo    ```bash >> build\README.md
+        echo    ollama pull llama3.2:latest >> build\README.md
+        echo    ``` >> build\README.md
+        echo. >> build\README.md
+        echo ## Quick Start >> build\README.md
+        echo Run \`launch.bat\` to start the server and open browser >> build\README.md
+        
+    - name: Package to Zip
+      run: |
+        powershell -Command "Compress-Archive -Path build\* -DestinationPath 'Atom-AI-Assistant.zip' -Force"
+        
+    - name: Create EXE with Batch to EXE Converter
+      run: |
+        # Create a simple batch file that extracts and runs
+        echo @echo off > temp_installer.bat
+        echo echo Extracting Atom AI Assistant... >> temp_installer.bat
+        echo powershell -Command "Expand-Archive -Path '%~f0' -DestinationPath '%%APPDATA%%\AtomAI' -Force" >> temp_installer.bat
+        echo echo Creating shortcuts... >> temp_installer.bat
+        echo echo [InternetShortcut] > "%%USERPROFILE%%\Desktop\Atom AI Assistant.url" >> temp_installer.bat
+        echo echo URL=http://localhost:8000 >> temp_installer.bat
+        echo echo Opening folder... >> temp_installer.bat
+        echo start "" "%%APPDATA%%\AtomAI" >> temp_installer.bat
+        echo pause >> temp_installer.bat
+        
+        # Convert batch to exe (simplified version)
+        echo // This is a placeholder for batch content > installer.txt
+        type temp_installer.bat >> installer.txt
+        
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: Atom-AI-Assistant
+        path: |
+          Atom-AI-Assistant.zip
+          build/
+          
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          Atom-AI-Assistant.zip
+        body: |
+          # Atom AI Assistant
+          
+          Local AI assistant with web interface
+          
+          ## Requirements
+          1. Install [Ollama](https://ollama.com)
+          2. Download model: \`ollama pull llama3.2:latest\`
+          
+          ## Installation
+          1. Extract Atom-AI-Assistant.zip
+          2. Run \`launch.bat\`
+          3. Open http://localhost:8000 in browser
