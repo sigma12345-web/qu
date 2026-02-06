@@ -1,0 +1,87 @@
+name: Build Atom AI Assistant
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup environment
+      run: |
+        # Create dist folder
+        mkdir dist
+        # Copy files
+        copy server.ps1 dist\
+        copy index.html dist\
+        # Rename batch file
+        copy в.bat dist\start.bat
+        
+    - name: Create portable package
+      run: |
+        # Create launcher
+        echo @echo off > dist\AtomAI-Launcher.bat
+        echo echo ======================================== >> dist\AtomAI-Launcher.bat
+        echo echo        ATOM AI ASSISTANT                 >> dist\AtomAI-Launcher.bat
+        echo echo ======================================== >> dist\AtomAI-Launcher.bat
+        echo echo. >> dist\AtomAI-Launcher.bat
+        echo echo Requirements: >> dist\AtomAI-Launcher.bat
+        echo echo 1. Ollama installed (https://ollama.com) >> dist\AtomAI-Launcher.bat
+        echo echo 2. AI model downloaded >> dist\AtomAI-Launcher.bat
+        echo echo    Run: ollama pull llama3.2:latest >> dist\AtomAI-Launcher.bat
+        echo echo. >> dist\AtomAI-Launcher.bat
+        echo echo Starting server... >> dist\AtomAI-Launcher.bat
+        echo start http://localhost:8000 >> dist\AtomAI-Launcher.bat
+        echo powershell -ExecutionPolicy Bypass -File "server.ps1" >> dist\AtomAI-Launcher.bat
+        
+    - name: Create documentation
+      run: |
+        echo # Atom AI Assistant v1.0 > dist\README.txt
+        echo. >> dist\README.txt
+        echo ## System Requirements >> dist\README.txt
+        echo - Windows 10/11 >> dist\README.txt
+        echo - PowerShell 5.1+ >> dist\README.txt
+        echo - Ollama installed >> dist\README.txt
+        echo. >> dist\README.txt
+        echo ## Quick Start >> dist\README.txt
+        echo 1. Install Ollama from https://ollama.com >> dist\README.txt
+        echo 2. Download AI model: ollama pull llama3.2:latest >> dist\README.txt
+        echo 3. Double-click AtomAI-Launcher.bat >> dist\README.txt
+        echo 4. Open browser to http://localhost:8000 >> dist\README.txt
+        echo. >> dist\README.txt
+        echo ## Files >> dist\README.txt
+        echo - server.ps1 - Web server >> dist\README.txt
+        echo - index.html - Web interface >> dist\README.txt
+        echo - start.bat - Alternative launcher >> dist\README.txt
+        echo - AtomAI-Launcher.bat - Main launcher >> dist\README.txt
+        
+    - name: Create ZIP archive
+      run: |
+        powershell -Command "Compress-Archive -Path dist\* -DestinationPath 'Atom-AI-Assistant-Portable.zip' -Force"
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Atom-AI-Assistant
+        path: |
+          Atom-AI-Assistant-Portable.zip
+          dist/
+              - name: Create simple EXE wrapper
+      run: |
+        # Create a batch file that can be converted to EXE
+        echo @echo off > AtomAI-Installer.bat
+        echo echo Installing Atom AI Assistant... >> AtomAI-Installer.bat
+        echo mkdir "%%USERPROFILE%%\AtomAI" >> AtomAI-Installer.bat
+        echo copy /Y server.ps1 "%%USERPROFILE%%\AtomAI\" >> AtomAI-Installer.bat
+        echo copy /Y index.html "%%USERPROFILE%%\AtomAI\" >> AtomAI-Installer.bat
+        echo copy /Y start.bat "%%USERPROFILE%%\AtomAI\" >> AtomAI-Installer.bat
+        echo echo [InternetShortcut] > "%%USERPROFILE%%\Desktop\Atom AI Assistant.url" >> AtomAI-Installer.bat
+        echo echo URL=http://localhost:8000 >> AtomAI-Installer.bat
+        echo echo Installation complete! >> AtomAI-Installer.bat
+        echo pause >> AtomAI-Installer.bat
