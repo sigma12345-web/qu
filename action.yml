@@ -1,0 +1,175 @@
+name: Build Atom AI Assistant
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Create Build Directory
+      run: |
+        mkdir build
+        copy server.ps1 build\
+        copy в.bat build\
+        copy index.html build\
+        
+    - name: Create Setup Script
+      run: |
+        @echo off
+        echo Creating setup script...
+        
+        echo @echo off > build\setup.bat
+        echo echo Установка Atom AI Assistant >> build\setup.bat
+        echo echo. >> build\setup.bat
+        echo echo Шаг 1: Проверка установки PowerShell... >> build\setup.bat
+        echo powershell -Command "Write-Host '✅ PowerShell доступен'" >> build\setup.bat
+        echo if errorlevel 1 ( >> build\setup.bat
+        echo   echo ❌ PowerShell не установлен >> build\setup.bat
+        echo   echo Установите PowerShell 5.1 или выше >> build\setup.bat
+        echo   pause >> build\setup.bat
+        echo   exit /b 1 >> build\setup.bat
+        echo ) >> build\setup.bat
+        echo. >> build\setup.bat
+        echo echo Шаг 2: Создание ярлыков... >> build\setup.bat
+        echo echo [InternetShortcut] > "%USERPROFILE%\Desktop\Atom AI Assistant.url" >> build\setup.bat
+        echo echo URL="http://localhost:8000" >> "%USERPROFILE%\Desktop\Atom AI Assistant.url" >> build\setup.bat
+        echo echo IconIndex=0 >> "%USERPROFILE%\Desktop\Atom AI Assistant.url" >> build\setup.bat
+        echo. >> build\setup.bat
+        echo echo Шаг 3: Создание файла запуска... >> build\setup.bat
+        echo echo @echo off > build\start.bat >> build\setup.bat
+        echo echo cd /d "%%~dp0" >> build\start.bat >> build\setup.bat
+        echo echo echo Запуск Atom AI Assistant... >> build\start.bat >> build\setup.bat
+        echo echo echo. >> build\start.bat >> build\setup.bat
+        echo echo echo Открытие браузера... >> build\start.bat >> build\setup.bat
+        echo echo start http://localhost:8000 >> build\start.bat >> build\setup.bat
+        echo echo echo Запуск сервера... >> build\start.bat >> build\setup.bat
+        echo echo powershell -ExecutionPolicy Bypass -File "server.ps1" >> build\start.bat >> build\setup.bat
+        echo echo pause >> build\start.bat >> build\setup.bat
+        echo. >> build\setup.bat
+        echo echo ✅ Установка завершена! >> build\setup.bat
+        echo echo. >> build\setup.bat
+        echo echo Для запуска Atom AI Assistant: >> build\setup.bat
+        echo echo 1. Дважды кликните на файл start.bat в папке build >> build\setup.bat
+        echo echo 2. Или откройте ярлык на рабочем столе >> build\setup.bat
+        echo echo. >> build\setup.bat
+        echo pause >> build\setup.bat
+        
+    - name: Create README
+      run: |
+        echo # Atom AI Assistant > build\README.md
+        echo. >> build\README.md
+        echo ## Описание >> build\README.md
+        echo Локальный AI-ассистент с интерфейсом чата, работающий через Ollama >> build\README.md
+        echo. >> build\README.md
+        echo ## Требования >> build\README.md
+        echo 1. Windows 10/11 >> build\README.md
+        echo 2. PowerShell 5.1 или выше >> build\README.md
+        echo 3. Ollama (для работы AI) >> build\README.md
+        echo. >> build\README.md
+        echo ## Установка >> build\README.md
+        echo 1. Скачайте и установите [Ollama](https://ollama.com) >> build\README.md
+        echo 2. Запустите Ollama и скачайте модель: >> build\README.md
+        echo    ```bash >> build\README.md
+        echo    ollama pull llama3.2:latest >> build\README.md
+        echo    ``` >> build\README.md
+        echo 3. Запустите `setup.bat` для начальной настройки >> build\README.md
+        echo 4. Запустите `start.bat` для запуска сервера >> build\README.md
+        echo. >> build\README.md
+        echo ## Использование >> build\README.md
+        echo 1. Откройте браузер и перейдите по адресу: http://localhost:8000 >> build\README.md
+        echo 2. Интерфейс откроется автоматически после запуска start.bat >> build\README.md
+        echo. >> build\README.md
+        echo ## Файлы >> build\README.md
+        echo - `server.ps1` - PowerShell сервер >> build\README.md
+        echo - `start.bat` - Файл запуска >> build\README.md
+        echo - `index.html` - Веб-интерфейс >> build\README.md
+        
+    - name: Package to Zip
+      run: |
+        powershell -Command "Compress-Archive -Path build\* -DestinationPath 'Atom-AI-Assistant.zip' -Force"
+        
+    - name: Create EXE with IExpress (Alternative)
+      run: |
+        @echo off
+        echo Creating self-extracting EXE...
+        
+        rem Create IExpress installation script
+        echo [Version] > express.sed
+        echo Class=IEXPRESS >> express.sed
+        echo SEDVersion=3 >> express.sed
+        echo [Options] >> express.sed
+        echo PackagePurpose=InstallApp >> express.sed
+        echo ShowInstallProgramWindow=0 >> express.sed
+        echo HideExtractAnimation=1 >> express.sed
+        echo UseLongFileName=1 >> express.sed
+        echo InsideCompressed=0 >> express.sed
+        echo CABPpticalSize=1024 >> express.sed
+        echo [Strings] >> express.sed
+        echo APPNAME=Atom AI Assistant >> express.sed
+        echo INSTALL_PROMPT_TITLE=Atom AI Assistant Setup >> express.sed
+        echo PROMPT_TEXT1=Установка Atom AI Assistant >> express.sed
+        echo PROMPT_TEXT2=Нажмите Далее для продолжения >> express.sed
+        echo FINISH_TITLE=Установка завершена >> express.sed
+        echo FINISH_TEXT=Atom AI Assistant успешно установлен! >> express.sed
+        echo [Startup] >> express.sed
+        echo CmdLine=setup.bat >> express.sed
+        echo [SourceFiles] >> express.sed
+        echo SourceFiles0=build\ >> express.sed
+        echo [SourceFiles0] >> express.sed
+        echo %%SERVER.PS1%%=server.ps1 >> express.sed
+        echo %%START.BAT%%=start.bat >> express.sed
+        echo %%INDEX.HTML%%=index.html >> express.sed
+        echo %%README.MD%%=README.md >> express.sed
+        
+        rem Run IExpress
+        iexpress /n /q /m express.sed /fAtom-AI-Assistant.exe /dbuild
+        
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: Atom-AI-Assistant
+        path: |
+          Atom-AI-Assistant.zip
+          Atom-AI-Assistant.exe
+          
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          Atom-AI-Assistant.zip
+          Atom-AI-Assistant.exe
+        body: |
+          # Atom AI Assistant
+          
+          Локальный AI-ассистент с веб-интерфейсом
+          
+          ## Требования
+          - Windows 10/11
+          - PowerShell 5.1+
+          - [Ollama](https://ollama.com)
+          
+          ## Установка
+          1. Скачайте и установите Ollama
+          2. Скачайте модель: `ollama pull llama3.2:latest`
+          3. Запустите Atom-AI-Assistant.exe
+          
+          ## Файлы
+          - **Atom-AI-Assistant.exe** - Установщик (рекомендуется)
+          - **Atom-AI-Assistant.zip** - Портативная версия
+          
+          ## Что нового
+          - Веб-интерфейс чата
+          - Поддержка Ollama
+          - Русский и английский языки
+          - Подсветка кода
+          - Озвучка ответов
+          - Управление историей чатов

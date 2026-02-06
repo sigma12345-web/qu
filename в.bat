@@ -1,0 +1,4 @@
+@echo off
+cd /d "%~dp0"
+echo Запуск сервера на http://localhost:8080
+powershell -ExecutionPolicy Bypass -Command "& {$listener = New-Object System.Net.HttpListener; $listener.Prefixes.Add('http://localhost:8080/'); $listener.Start(); Write-Host '✅ Сервер запущен: http://localhost:8080'; Write-Host '⏹️  Не закрывайте это окно!'; while ($listener.IsListening) { $context = $listener.GetContext(); $path = $context.Request.Url.LocalPath.TrimStart('/'); if ($path -eq '') { $path = 'index.html' }; $filePath = Join-Path (Get-Location) $path; if (Test-Path $filePath) { $content = [System.IO.File]::ReadAllBytes($filePath); $context.Response.OutputStream.Write($content, 0, $content.Length) } else { $context.Response.StatusCode = 404 }; $context.Response.Close() }}"

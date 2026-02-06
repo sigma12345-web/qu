@@ -1,0 +1,2215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Атом | AI Ассистент</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Все оригинальные стили остаются без изменений */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 1200px;
+            height: 95vh;
+            background-color: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            display: flex;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Сайдбар с чатами */
+        .chats-sidebar {
+            width: 300px;
+            background: linear-gradient(180deg, #4f6df5 0%, #7b4ff5 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .new-chat-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 12px 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .new-chat-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .chats-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .chat-item {
+            padding: 15px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .chat-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .chat-item.active {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-preview {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-date {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            margin-top: 5px;
+        }
+
+        .chat-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .chat-item:hover .chat-actions {
+            opacity: 1;
+        }
+
+        .chat-action-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 6px;
+            padding: 4px 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: all 0.3s ease;
+        }
+
+        .chat-action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Основная область чата */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: linear-gradient(90deg, #4f6df5, #7b4ff5);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(45deg, #fff, #e0f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header p {
+            font-size: 1.05rem;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+
+        .language-selector {
+            position: absolute;
+            top: 25px;
+            left: 30px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .language-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 8px 16px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .language-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .language-button.active {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: white;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+        }
+
+        .status-dot.streaming {
+            background: #f59e0b;
+            animation: pulse 0.8s infinite;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
+        .status-dot.error {
+            background: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 20px 25px;
+            border-radius: 25px;
+            line-height: 1.6;
+            position: relative;
+            animation: messageSlide 0.4s ease-out;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #4f6df5, #7b4ff5);
+            color: white;
+            border-bottom-right-radius: 10px;
+            margin-left: auto;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background: white;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+            border-bottom-left-radius: 10px;
+        }
+
+        .streaming-message {
+            align-self: flex-start;
+            background: linear-gradient(135deg, #ffffff, #f0f9ff);
+            border: 2px solid #7b4ff5;
+            border-bottom-left-radius: 10px;
+            box-shadow: 0 4px 20px rgba(123, 79, 245, 0.2);
+        }
+
+        .message-text {
+            font-size: 1.1rem;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 10px;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .bot-message .message-time {
+            text-align: left;
+        }
+
+        .streaming-cursor {
+            display: inline-block;
+            width: 4px;
+            height: 1.2em;
+            background: #7b4ff5;
+            margin-left: 2px;
+            border-radius: 1px;
+            animation: cursorBlink 1.2s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes cursorBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .chat-input-container {
+            padding: 25px 30px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            max-width: 100%;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 18px 25px;
+            border: 2px solid #e5e7eb;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-input:focus {
+            border-color: #7b4ff5;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(123, 79, 245, 0.1), inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-input:disabled {
+            background: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #4f6df5, #7b4ff5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(79, 109, 245, 0.4);
+        }
+
+        .send-button:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(79, 109, 245, 0.5);
+        }
+
+        .send-button:active:not(:disabled) {
+            transform: translateY(0) scale(1);
+        }
+
+        .send-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .atom-icon {
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 1.4em;
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+        }
+
+        .bull-icon {
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 1.3em;
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+        }
+
+        .error-message {
+            background: #fee2e2 !important;
+            color: #dc2626 !important;
+            border: 1px solid #fecaca !important;
+        }
+
+        .warning-message {
+            background: #fef3c7 !important;
+            color: #d97706 !important;
+            border: 1px solid #fde68a !important;
+        }
+
+        .info-message {
+            background: #dbeafe !important;
+            color: #1e40af !important;
+            border: 1px solid #bfdbfe !important;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            border-radius: 12px;
+            margin: 15px 0;
+            overflow: hidden;
+            border: 1px solid #333;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .code-header {
+            background: #2d2d2d;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .code-language {
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .code-action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+        }
+
+        .code-action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .code-content {
+            padding: 20px;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .copy-notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: #10b981;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+            font-weight: 500;
+        }
+
+        .copy-notification.active {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Новые стили для кнопок озвучки */
+        .voice-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .voice-btn {
+            background: rgba(123, 79, 245, 0.1);
+            border: 1px solid rgba(123, 79, 245, 0.3);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: #7b4ff5;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .voice-btn:hover {
+            background: rgba(123, 79, 245, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .voice-btn.active {
+            background: #7b4ff5;
+            color: white;
+        }
+
+        .voice-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+                max-width: 100%;
+                flex-direction: column;
+            }
+            
+            .chats-sidebar {
+                width: 100%;
+                height: 200px;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+            
+            .chat-header h1 {
+                font-size: 1.6rem;
+            }
+            
+            .status-indicator {
+                position: static;
+                justify-content: center;
+                margin-top: 15px;
+                width: fit-content;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            
+            .language-selector {
+                position: static;
+                justify-content: center;
+                margin-bottom: 15px;
+            }
+
+            .code-content {
+                font-size: 0.8rem;
+                padding: 15px;
+            }
+
+            .chat-header {
+                padding: 20px;
+            }
+
+            .chat-messages {
+                padding: 20px;
+            }
+
+            .chat-input-container {
+                padding: 20px;
+            }
+
+            .voice-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-radius: 20px;
+            border: 2px dashed #7b4ff5;
+            margin: 10px 0;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .quick-action {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .quick-action:hover {
+            border-color: #7b4ff5;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(123, 79, 245, 0.2);
+        }
+
+        .quick-action i {
+            font-size: 1.5rem;
+            color: #7b4ff5;
+            margin-bottom: 10px;
+        }
+
+        .quick-action span {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .suggested-questions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .suggested-question {
+            background: rgba(123, 79, 245, 0.05);
+            border: 1px solid rgba(123, 79, 245, 0.2);
+            border-radius: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            color: #7b4ff5;
+        }
+
+        .suggested-question:hover {
+            background: rgba(123, 79, 245, 0.1);
+            transform: translateX(5px);
+        }
+
+        .empty-chats {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .empty-chats i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Сайдбар с чатами -->
+        <div class="chats-sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-comments"></i> Мои чаты</h2>
+                <button class="new-chat-btn" id="newChatBtn">
+                    <i class="fas fa-plus"></i>
+                    Новый чат
+                </button>
+            </div>
+            <div class="chats-list" id="chatsList">
+                <div class="empty-chats">
+                    <i class="fas fa-comment-slash"></i>
+                    <p>Чатов пока нет</p>
+                    <p style="font-size: 0.8rem; margin-top: 10px;">Создайте первый чат!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Основная область чата -->
+        <div class="chat-main">
+            <div class="chat-header">
+                <div class="language-selector">
+                    <button class="language-button active" data-lang="ru" title="Русский">🇷🇺 RU</button>
+                    <button class="language-button" data-lang="en" title="English">🇺🇸 EN</button>
+                </div>
+                
+                <h1><span class="atom-icon">⚛️</span><span class="bull-icon">🐂</span><span id="appTitle">Атом</span></h1>
+                <p id="appSubtitle">AI-ассистент</p>
+                <div class="status-indicator">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">Проверка подключения...</span>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message welcome-message">
+                    <div class="message-text">
+                        <strong>Добро пожаловать в Атом! 🤖🐂</strong>
+                        <p style="margin-top: 10px; opacity: 0.9;">Я ваш AI-ассистент. Чем могу помочь?</p>
+                        
+                        <div class="quick-actions">
+                            <div class="quick-action" onclick="atomChat.handleQuickAction('code')">
+                                <i class="fas fa-code"></i>
+                                <span>Помощь с кодом</span>
+                            </div>
+                            <div class="quick-action" onclick="atomChat.handleQuickAction('explain')">
+                                <i class="fas fa-lightbulb"></i>
+                                <span>Объяснить тему</span>
+                            </div>
+                            <div class="quick-action" onclick="atomChat.handleQuickAction('write')">
+                                <i class="fas fa-pen"></i>
+                                <span>Написать текст</span>
+                            </div>
+                        </div>
+
+                        <div class="suggested-questions">
+                            <div class="suggested-question" onclick="atomChat.handleSuggestedQuestion('Объясни, что такое искусственный интеллект')">
+                                🤖 Объясни искусственный интеллект
+                            </div>
+                            <div class="suggested-question" onclick="atomChat.handleSuggestedQuestion('Напиши пример кода на Python')">
+                                🐍 Напиши пример кода на Python
+                            </div>
+                            <div class="suggested-question" onclick="atomChat.handleSuggestedQuestion('Помоги с домашним заданием по математике')">
+                                📚 Помоги с домашним заданием
+                            </div>
+                        </div>
+                    </div>
+                    <div class="message-time" id="welcomeTime">Только что</div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                    <input 
+                        type="text" 
+                        class="chat-input" 
+                        id="messageInput" 
+                        placeholder="Введите ваш вопрос..." 
+                        autocomplete="off"
+                        maxlength="4000"
+                        disabled
+                    >
+                    <button class="send-button" id="sendButton" title="Отправить сообщение" disabled>
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Уведомление о копировании -->
+    <div class="copy-notification" id="copyNotification">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+        Код скопирован в буфер обмена!
+    </div>
+
+    <script>
+        class AtomChat {
+            constructor() {
+                this.version = '4.0.0';
+                this.initialize();
+            }
+
+            initialize() {
+                this.elements = {
+                    chatMessages: document.getElementById('chatMessages'),
+                    messageInput: document.getElementById('messageInput'),
+                    sendButton: document.getElementById('sendButton'),
+                    statusDot: document.getElementById('statusDot'),
+                    statusText: document.getElementById('statusText'),
+                    appTitle: document.getElementById('appTitle'),
+                    appSubtitle: document.getElementById('appSubtitle'),
+                    copyNotification: document.getElementById('copyNotification'),
+                    newChatBtn: document.getElementById('newChatBtn'),
+                    chatsList: document.getElementById('chatsList')
+                };
+
+                this.config = {
+                    ollama: {
+                        baseUrl: 'http://localhost:11434',
+                        endpoints: {
+                            generate: '/api/generate',
+                            tags: '/api/tags'
+                        },
+                        models: ['llama3.2:latest', 'llama2:latest', 'mistral:latest', 'codellama:latest'],
+                        timeout: 60000,
+                        retryAttempts: 3,
+                        retryDelay: 2000
+                    },
+                    features: {
+                        streaming: true,
+                        codeDetection: true,
+                        autoReconnect: true,
+                        smartContext: true,
+                        messageHistory: 10,
+                        typingSpeed: 20,
+                        maxTokens: 4000,
+                        textToSpeech: true,
+                        speechRate: 1.0,
+                        speechPitch: 1.0
+                    }
+                };
+
+                this.languages = {
+                    ru: {
+                        name: 'Русский',
+                        code: 'ru',
+                        flag: '🇷🇺',
+                        prompts: {
+                            system: `Ты - AI-ассистент "Атом". ОБЯЗАТЕЛЬНО отвечай ТОЛЬКО на РУССКОМ языке.
+Ты должен полностью понимать и корректно обрабатывать русский язык.
+Соблюдай грамматику, орфографию и стилистику русского языка.
+Будь точным, информативным и дружелюбным.
+
+Для обычных вопросов предоставляй качественные ответы.
+Если пользователь просит код - предоставь РАБОЧИЙ код с комментариями на русском.
+Форматируй ответы с использованием Markdown для лучшей читаемости.
+Для блоков кода используй \`\`\`язык перед кодом и \`\`\` после кода.
+Для inline кода используй одинарные обратные кавычки: \`код\`.
+НИКОГДА не используй английские слова или фразы без крайней необходимости.`,
+                            greeting: 'Здравствуйте! Я Атом - ваш AI-ассистент. Чем могу помочь?'
+                        },
+                        ui: {
+                            title: 'Атом',
+                            subtitle: 'AI-ассистент',
+                            inputPlaceholder: 'Введите ваш вопрос...',
+                            status: {
+                                checking: 'Проверка подключения...',
+                                online: 'Атом онлайн',
+                                streaming: 'Атом пишет...',
+                                error: 'Атом оффлайн',
+                                reconnecting: 'Переподключение...'
+                            },
+                            messages: {
+                                connectionSuccess: '✅ Подключение к AI установлено успешно',
+                                connectionError: '⚠️ Не удалось подключиться к Ollama',
+                                connectionTip: '💡 Убедитесь, что Ollama запущен на localhost:11434',
+                                pleaseWait: 'Дождитесь завершения текущего ответа',
+                                pleaseEnter: 'Пожалуйста, введите сообщение',
+                                noConnection: 'Нет подключения к AI',
+                                retrying: 'Повторная попытка подключения...',
+                                modelInfo: 'Используемая модель: {model}',
+                                thinking: 'Думаю над ответом...'
+                            }
+                        }
+                    },
+                    en: {
+                        name: 'English',
+                        code: 'en',
+                        flag: '🇺🇸',
+                        prompts: {
+                            system: `You are AI assistant "Atom". Respond ONLY in ENGLISH.
+Maintain proper grammar and style.
+Be accurate, informative, and friendly.
+
+For regular questions provide quality answers.
+If user asks for code - provide WORKING code with comments.
+Format responses using Markdown for better readability.
+Use \`\`\`language before code and \`\`\` after code for code blocks.
+Use single backticks for inline code: \`code\`.
+Do NOT use Russian words or phrases.`,
+                            greeting: 'Hello! I am Atom - your AI assistant. How can I help you?'
+                        },
+                        ui: {
+                            title: 'Atom',
+                            subtitle: 'AI assistant',
+                            inputPlaceholder: 'Enter your question...',
+                            status: {
+                                checking: 'Checking connection...',
+                                online: 'Atom online',
+                                streaming: 'Atom is typing...',
+                                error: 'Atom offline',
+                                reconnecting: 'Reconnecting...'
+                            },
+                            messages: {
+                                connectionSuccess: '✅ AI connection established successfully',
+                                connectionError: '⚠️ Failed to connect to Ollama',
+                                connectionTip: '💡 Make sure Ollama is running on localhost:11434',
+                                pleaseWait: 'Please wait for the current response to complete',
+                                pleaseEnter: 'Please enter a message',
+                                noConnection: 'No AI connection',
+                                retrying: 'Retrying connection...',
+                                modelInfo: 'Using model: {model}',
+                                thinking: 'Thinking about the answer...'
+                            }
+                        }
+                    }
+                };
+
+                this.state = {
+                    isOnline: false,
+                    isStreaming: false,
+                    connectionChecked: false,
+                    messageCount: 0,
+                    currentStreamingMessage: null,
+                    conversationHistory: [],
+                    currentLanguage: 'ru',
+                    currentModel: this.config.ollama.models[0],
+                    reconnectAttempts: 0,
+                    isThinking: false,
+                    codeBlocks: new Map(),
+                    currentChatId: null,
+                    chats: this.loadChatsFromStorage(),
+                    isNewChat: true,
+                    speechSynthesis: null,
+                    isSpeaking: false,
+                    currentUtterance: null,
+                    voiceSettings: {
+                        enabled: true,
+                        rate: 1.0,
+                        pitch: 1.0,
+                        voice: null
+                    }
+                };
+
+                this.initSpeechSynthesis();
+                this.setupEventListeners();
+                this.performStartupChecks();
+                this.renderChatsList();
+                
+                console.log(`🚀 Атом ${this.version} инициализирован`);
+            }
+
+            initSpeechSynthesis() {
+                if ('speechSynthesis' in window) {
+                    this.state.speechSynthesis = window.speechSynthesis;
+                    
+                    // Ждем загрузки голосов
+                    setTimeout(() => {
+                        this.loadAvailableVoices();
+                    }, 1000);
+                    
+                    // Обновляем голоса при их изменении
+                    window.speechSynthesis.onvoiceschanged = () => {
+                        this.loadAvailableVoices();
+                    };
+                } else {
+                    console.warn('Web Speech API не поддерживается в этом браузере');
+                }
+            }
+
+            loadAvailableVoices() {
+                if (!this.state.speechSynthesis) return;
+                
+                const voices = this.state.speechSynthesis.getVoices();
+                const langCode = this.state.currentLanguage === 'ru' ? 'ru-RU' : 'en-US';
+                
+                // Выбираем подходящий голос для текущего языка
+                const preferredVoice = voices.find(voice => 
+                    voice.lang.startsWith(langCode) && 
+                    voice.name.includes('Microsoft') || 
+                    voice.name.includes('Google') ||
+                    voice.name.includes('Natural')
+                ) || voices.find(voice => voice.lang.startsWith(langCode));
+                
+                if (preferredVoice) {
+                    this.state.voiceSettings.voice = preferredVoice;
+                    console.log(`🎤 Выбран голос: ${preferredVoice.name}`);
+                }
+            }
+
+            speakText(text) {
+                if (!this.state.voiceSettings.enabled || !this.state.speechSynthesis) return;
+                
+                // Останавливаем текущую речь
+                this.stopSpeaking();
+                
+                // Очищаем текст от Markdown и HTML тегов
+                const cleanText = this.cleanTextForSpeech(text);
+                
+                if (!cleanText.trim()) return;
+                
+                try {
+                    const utterance = new SpeechSynthesisUtterance(cleanText);
+                    
+                    // Настраиваем параметры речи
+                    utterance.rate = this.state.voiceSettings.rate;
+                    utterance.pitch = this.state.voiceSettings.pitch;
+                    utterance.volume = 1.0;
+                    
+                    // Выбираем голос
+                    if (this.state.voiceSettings.voice) {
+                        utterance.voice = this.state.voiceSettings.voice;
+                    } else {
+                        // Автоматический выбор голоса по языку
+                        const voices = this.state.speechSynthesis.getVoices();
+                        const langCode = this.state.currentLanguage === 'ru' ? 'ru-RU' : 'en-US';
+                        const voice = voices.find(v => v.lang.startsWith(langCode));
+                        if (voice) utterance.voice = voice;
+                    }
+                    
+                    // События для управления состоянием
+                    utterance.onstart = () => {
+                        this.state.isSpeaking = true;
+                        this.state.currentUtterance = utterance;
+                        console.log('🎤 Начало речи');
+                    };
+                    
+                    utterance.onend = () => {
+                        this.state.isSpeaking = false;
+                        this.state.currentUtterance = null;
+                        console.log('🎤 Конец речи');
+                    };
+                    
+                    utterance.onerror = (event) => {
+                        console.error('Ошибка речи:', event);
+                        this.state.isSpeaking = false;
+                        this.state.currentUtterance = null;
+                    };
+                    
+                    // Начинаем речь
+                    this.state.speechSynthesis.speak(utterance);
+                    
+                } catch (error) {
+                    console.error('Ошибка при создании речи:', error);
+                }
+            }
+
+            stopSpeaking() {
+                if (this.state.speechSynthesis && this.state.isSpeaking) {
+                    this.state.speechSynthesis.cancel();
+                    this.state.isSpeaking = false;
+                    this.state.currentUtterance = null;
+                }
+            }
+
+            cleanTextForSpeech(text) {
+                // Удаляем код и Markdown разметку
+                return text
+                    .replace(/```[\s\S]*?```/g, '') // Удаляем блоки кода
+                    .replace(/`[^`]*`/g, '') // Удаляем inline код
+                    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // Удаляем ссылки Markdown
+                    .replace(/#{1,6}\s*/g, '') // Удаляем заголовки
+                    .replace(/\*\*([^*]+)\*\*/g, '$1') // Удаляем жирный текст
+                    .replace(/\*([^*]+)\*/g, '$1') // Удаляем курсив
+                    .replace(/<[^>]*>/g, '') // Удаляем HTML теги
+                    .replace(/\n+/g, '. ') // Заменяем переносы на точки
+                    .replace(/\s+/g, ' ') // Убираем лишние пробелы
+                    .trim();
+            }
+
+            setupEventListeners() {
+                this.elements.sendButton.addEventListener('click', () => this.handleSendMessage());
+                
+                this.elements.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.handleSendMessage();
+                    }
+                });
+
+                document.querySelectorAll('.language-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const lang = e.target.dataset.lang;
+                        this.changeLanguage(lang);
+                    });
+                });
+
+                this.elements.newChatBtn.addEventListener('click', () => {
+                    this.createNewChat();
+                });
+
+                this.elements.chatMessages.addEventListener('click', (e) => {
+                    const target = e.target;
+                    const button = target.closest('.code-action-btn');
+                    
+                    if (button) {
+                        const codeBlock = button.closest('.code-block');
+                        if (codeBlock) {
+                            const codeId = codeBlock.id;
+                            const language = codeBlock.querySelector('.code-language').textContent.toLowerCase();
+                            
+                            if (button.innerHTML.includes('fa-copy')) {
+                                this.copyCodeBlockToClipboard(codeId);
+                            } else if (button.innerHTML.includes('fa-play')) {
+                                this.runCodeBlock(codeId, language);
+                            }
+                        }
+                    }
+                    
+                    // Обработка кнопок озвучки
+                    const voiceBtn = target.closest('.voice-btn');
+                    if (voiceBtn) {
+                        const action = voiceBtn.dataset.action;
+                        if (action === 'speak') {
+                            const messageElement = voiceBtn.closest('.bot-message');
+                            if (messageElement) {
+                                const textElement = messageElement.querySelector('.message-text');
+                                if (textElement) {
+                                    this.speakText(textElement.textContent);
+                                    voiceBtn.classList.add('active');
+                                }
+                            }
+                        } else if (action === 'stop') {
+                            this.stopSpeaking();
+                            document.querySelectorAll('.voice-btn.active').forEach(btn => {
+                                btn.classList.remove('active');
+                            });
+                        } else if (action === 'toggle') {
+                            this.state.voiceSettings.enabled = !this.state.voiceSettings.enabled;
+                            voiceBtn.classList.toggle('active', this.state.voiceSettings.enabled);
+                            
+                            if (!this.state.voiceSettings.enabled) {
+                                this.stopSpeaking();
+                            }
+                        }
+                    }
+                });
+
+                // Останавливаем речь при закрытии страницы
+                window.addEventListener('beforeunload', () => {
+                    this.stopSpeaking();
+                });
+
+                this.elements.messageInput.focus();
+            }
+
+            createNewChat() {
+                this.stopSpeaking(); // Останавливаем речь при создании нового чата
+                this.state.currentChatId = 'chat-' + Date.now();
+                this.state.isNewChat = true;
+                this.state.conversationHistory = [];
+                
+                this.elements.chatMessages.innerHTML = '';
+                this.showWelcomeMessage();
+                this.setUIState(true);
+                
+                console.log('🆕 Создан новый чат');
+            }
+
+            saveChat(firstMessage, fullConversation = []) {
+                if (!this.state.currentChatId) return;
+
+                const chatTitle = firstMessage.length > 50 ? 
+                    firstMessage.substring(0, 47) + '...' : firstMessage;
+
+                const chat = {
+                    id: this.state.currentChatId,
+                    title: chatTitle,
+                    firstMessage: firstMessage,
+                    messages: [...fullConversation],
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    language: this.state.currentLanguage
+                };
+
+                const existingIndex = this.state.chats.findIndex(c => c.id === this.state.currentChatId);
+                if (existingIndex >= 0) {
+                    this.state.chats[existingIndex] = chat;
+                } else {
+                    this.state.chats.unshift(chat);
+                }
+
+                this.saveChatsToStorage();
+                this.renderChatsList();
+                
+                console.log('💾 Чат сохранен:', chatTitle);
+            }
+
+            loadChat(chatId) {
+                this.stopSpeaking(); // Останавливаем речь при загрузке чата
+                const chat = this.state.chats.find(c => c.id === chatId);
+                if (!chat) return;
+
+                this.state.currentChatId = chatId;
+                this.state.isNewChat = false;
+                this.state.conversationHistory = chat.messages;
+
+                this.elements.chatMessages.innerHTML = '';
+                
+                chat.messages.forEach(message => {
+                    if (message.role === 'user') {
+                        this.addUserMessage(message.content, false);
+                    } else if (message.role === 'assistant') {
+                        this.addBotMessage(message.content, this.languages[this.state.currentLanguage], false);
+                    }
+                });
+
+                this.scrollToBottom();
+                this.setUIState(true);
+                
+                console.log('📂 Загружен чат:', chat.title);
+            }
+
+            deleteChat(chatId, event) {
+                event.stopPropagation();
+                
+                if (confirm(this.state.currentLanguage === 'ru' ? 
+                    'Вы уверены, что хотите удалить этот чат?' : 
+                    'Are you sure you want to delete this chat?')) {
+                    
+                    this.state.chats = this.state.chats.filter(c => c.id !== chatId);
+                    
+                    if (this.state.currentChatId === chatId) {
+                        this.createNewChat();
+                    }
+                    
+                    this.saveChatsToStorage();
+                    this.renderChatsList();
+                    
+                    console.log('🗑️ Чат удален');
+                }
+            }
+
+            renderChatsList() {
+                const chatsList = this.elements.chatsList;
+                
+                if (this.state.chats.length === 0) {
+                    chatsList.innerHTML = `
+                        <div class="empty-chats">
+                            <i class="fas fa-comment-slash"></i>
+                            <p>${this.state.currentLanguage === 'ru' ? 'Чатов пока нет' : 'No chats yet'}</p>
+                            <p style="font-size: 0.8rem; margin-top: 10px;">
+                                ${this.state.currentLanguage === 'ru' ? 'Создайте первый чат!' : 'Create your first chat!'}
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                chatsList.innerHTML = this.state.chats.map(chat => `
+                    <div class="chat-item ${this.state.currentChatId === chat.id ? 'active' : ''}" 
+                         onclick="atomChat.loadChat('${chat.id}')">
+                        <div class="chat-title">${this.escapeHtml(chat.title)}</div>
+                        <div class="chat-preview">${this.escapeHtml(chat.firstMessage)}</div>
+                        <div class="chat-date">${new Date(chat.updatedAt).toLocaleDateString()}</div>
+                        <div class="chat-actions">
+                            <button class="chat-action-btn" onclick="atomChat.deleteChat('${chat.id}', event)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            loadChatsFromStorage() {
+                try {
+                    const saved = localStorage.getItem('atom-chats');
+                    return saved ? JSON.parse(saved) : [];
+                } catch (error) {
+                    console.error('Ошибка загрузки чатов:', error);
+                    return [];
+                }
+            }
+
+            saveChatsToStorage() {
+                try {
+                    localStorage.setItem('atom-chats', JSON.stringify(this.state.chats));
+                } catch (error) {
+                    console.error('Ошибка сохранения чатов:', error);
+                }
+            }
+
+            showWelcomeMessage() {
+                const langConfig = this.languages[this.state.currentLanguage];
+                const welcomeDiv = document.createElement('div');
+                welcomeDiv.className = 'message bot-message welcome-message';
+                welcomeDiv.innerHTML = `
+                    <div class="message-text">
+                        <strong>${this.state.currentLanguage === 'ru' ? 'Добро пожаловать в Атом! 🤖🐂' : 'Welcome to Atom! 🤖🐂'}</strong>
+                        <p style="margin-top: 10px; opacity: 0.9;">
+                            ${this.state.currentLanguage === 'ru' 
+                                ? 'Я ваш AI-ассистент. Чем могу помочь?' 
+                                : 'I am your AI assistant. How can I help you?'}
+                        </p>
+                        
+                        <div class="quick-actions">
+                            <div class="quick-action" onclick="atomChat.handleQuickAction('code')">
+                                <i class="fas fa-code"></i>
+                                <span>${this.state.currentLanguage === 'ru' ? 'Помощь с кодом' : 'Code help'}</span>
+                            </div>
+                            <div class="quick-action" onclick="atomChat.handleQuickAction('explain')">
+                                <i class="fas fa-lightbulb"></i>
+                                <span>${this.state.currentLanguage === 'ru' ? 'Объяснить тему' : 'Explain topic'}</span>
+                            </div>
+                            <div class="quick-action" onclick="atomChat.handleQuickAction('write')">
+                                <i class="fas fa-pen"></i>
+                                <span>${this.state.currentLanguage === 'ru' ? 'Написать текст' : 'Write text'}</span>
+                            </div>
+                        </div>
+
+                        <div class="suggested-questions">
+                            <div class="suggested-question" onclick="atomChat.handleSuggestedQuestion('${this.state.currentLanguage === 'ru' ? 'Объясни, что такое искусственный интеллект' : 'Explain what artificial intelligence is'}')">
+                                🤖 ${this.state.currentLanguage === 'ru' ? 'Объясни искусственный интеллект' : 'Explain artificial intelligence'}
+                            </div>
+                            <div class="suggested-question" onclick="atomChat.handleSuggestedQuestion('${this.state.currentLanguage === 'ru' ? 'Напиши пример кода на Python' : 'Write a Python code example'}')">
+                                🐍 ${this.state.currentLanguage === 'ru' ? 'Напиши пример кода на Python' : 'Write Python code example'}
+                            </div>
+                            <div class="suggested-question" onclick="atomChat.handleSuggestedQuestion('${this.state.currentLanguage === 'ru' ? 'Помоги с домашним заданием по математике' : 'Help with math homework'}')">
+                                📚 ${this.state.currentLanguage === 'ru' ? 'Помоги с домашним заданием' : 'Help with homework'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="message-time">${this.getCurrentTime()}</div>
+                `;
+                
+                this.elements.chatMessages.appendChild(welcomeDiv);
+                this.scrollToBottom();
+            }
+
+            handleQuickAction(type) {
+                const prompts = {
+                    ru: {
+                        code: "Мне нужна помощь с программированием. Можешь помочь написать или исправить код?",
+                        explain: "Можешь объяснить эту концепцию простыми словами?",
+                        write: "Помоги мне написать качественный текст на тему..."
+                    },
+                    en: {
+                        code: "I need help with programming. Can you help write or fix code?",
+                        explain: "Can you explain this concept in simple terms?",
+                        write: "Help me write quality text about..."
+                    }
+                };
+                
+                const langPrompts = prompts[this.state.currentLanguage];
+                this.elements.messageInput.value = langPrompts[type];
+                this.elements.messageInput.focus();
+            }
+
+            handleSuggestedQuestion(question) {
+                this.elements.messageInput.value = question;
+                this.handleSendMessage();
+            }
+
+            async handleSendMessage() {
+                const message = this.elements.messageInput.value.trim();
+                const langConfig = this.languages[this.state.currentLanguage];
+                
+                if (!message) {
+                    this.showSystemMessage(langConfig.ui.messages.pleaseEnter, 'warning');
+                    return;
+                }
+
+                if (!this.state.isOnline) {
+                    this.showSystemMessage(langConfig.ui.messages.noConnection, 'error');
+                    return;
+                }
+
+                if (this.state.isStreaming) {
+                    this.showSystemMessage(langConfig.ui.messages.pleaseWait, 'warning');
+                    return;
+                }
+
+                if (this.state.isNewChat && !this.state.currentChatId) {
+                    this.state.currentChatId = 'chat-' + Date.now();
+                }
+
+                await this.processMessage(message);
+            }
+
+            async processMessage(message) {
+                this.setUIState(false);
+                
+                this.addUserMessage(message);
+                this.elements.messageInput.value = '';
+
+                await this.processTextResponse(message);
+                this.setUIState(true);
+            }
+
+            async processTextResponse(message) {
+                try {
+                    const langConfig = this.languages[this.state.currentLanguage];
+                    const response = await this.getAIResponse(message, langConfig);
+                    
+                    if (this.config.features.streaming) {
+                        await this.simulateStreamingResponse(response, langConfig);
+                    } else {
+                        this.addBotMessage(response, langConfig);
+                    }
+                    
+                    if (this.state.isNewChat) {
+                        this.saveChat(message, this.state.conversationHistory);
+                        this.state.isNewChat = false;
+                    } else if (this.state.currentChatId) {
+                        this.saveChat(
+                            this.state.chats.find(c => c.id === this.state.currentChatId)?.firstMessage || message,
+                            this.state.conversationHistory
+                        );
+                    }
+                    
+                } catch (error) {
+                    console.error('Ошибка обработки сообщения:', error);
+                    const langConfig = this.languages[this.state.currentLanguage];
+                    this.showSystemMessage(
+                        this.state.currentLanguage === 'ru' 
+                            ? 'Произошла ошибка при получении ответа' 
+                            : 'An error occurred while getting response',
+                        'error'
+                    );
+                }
+            }
+
+            createCodeBlock(code, language = 'text') {
+                const codeId = 'code-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                
+                const codeBlock = document.createElement('div');
+                codeBlock.className = 'code-block';
+                codeBlock.id = codeId;
+                
+                const codeHeader = document.createElement('div');
+                codeHeader.className = 'code-header';
+                
+                const codeLanguage = document.createElement('div');
+                codeLanguage.className = 'code-language';
+                codeLanguage.textContent = language.toUpperCase();
+                
+                const codeActions = document.createElement('div');
+                codeActions.className = 'code-actions';
+                
+                const copyButton = document.createElement('button');
+                copyButton.className = 'code-action-btn';
+                copyButton.innerHTML = `
+                    <i class="fas fa-copy"></i>
+                    ${this.state.currentLanguage === 'ru' ? 'Копировать' : 'Copy'}
+                `;
+                
+                const runButton = document.createElement('button');
+                runButton.className = 'code-action-btn';
+                runButton.innerHTML = `
+                    <i class="fas fa-play"></i>
+                    ${this.state.currentLanguage === 'ru' ? 'Запустить' : 'Run'}
+                `;
+                
+                codeActions.appendChild(copyButton);
+                if (['javascript', 'python', 'html', 'css'].includes(language.toLowerCase())) {
+                    codeActions.appendChild(runButton);
+                }
+                
+                codeHeader.appendChild(codeLanguage);
+                codeHeader.appendChild(codeActions);
+                
+                const codeContent = document.createElement('div');
+                codeContent.className = 'code-content';
+                codeContent.textContent = code;
+                
+                codeBlock.appendChild(codeHeader);
+                codeBlock.appendChild(codeContent);
+                
+                this.state.codeBlocks.set(codeId, { code, language });
+                
+                return codeBlock;
+            }
+
+            copyCodeBlockToClipboard(codeId) {
+                const codeData = this.state.codeBlocks.get(codeId);
+                if (!codeData) return;
+
+                const code = codeData.code;
+                try {
+                    navigator.clipboard.writeText(code).then(() => {
+                        this.showCopyNotification();
+                    }).catch(() => {
+                        const textArea = document.createElement('textarea');
+                        textArea.value = code;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        this.showCopyNotification();
+                    });
+                } catch (err) {
+                    console.error('Ошибка копирования: ', err);
+                }
+            }
+
+            runCodeBlock(codeId, language) {
+                const codeData = this.state.codeBlocks.get(codeId);
+                if (!codeData) return;
+
+                const code = codeData.code;
+                
+                this.showSystemMessage(
+                    this.state.currentLanguage === 'ru' 
+                        ? `Запуск ${language} кода...` 
+                        : `Running ${language} code...`,
+                    'info'
+                );
+
+                try {
+                    switch (language.toLowerCase()) {
+                        case 'javascript':
+                            this.runJavaScriptCode(code);
+                            break;
+                        case 'html':
+                            this.runHTMLCode(code);
+                            break;
+                        case 'python':
+                            this.showSystemMessage(
+                                this.state.currentLanguage === 'ru'
+                                    ? 'Запуск Python кода требует серверной части. Вот код для выполнения:'
+                                    : 'Running Python code requires server-side execution. Here is the code to run:',
+                                'info'
+                            );
+                            const pythonBlock = this.createCodeBlock(code, 'python');
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = 'message bot-message';
+                            messageDiv.appendChild(pythonBlock);
+                            this.elements.chatMessages.appendChild(messageDiv);
+                            this.scrollToBottom();
+                            break;
+                        default:
+                            this.showSystemMessage(
+                                this.state.currentLanguage === 'ru'
+                                    ? `Запуск кода на ${language} не поддерживается в браузере`
+                                    : `Running ${language} code is not supported in browser`,
+                                'warning'
+                            );
+                    }
+                } catch (error) {
+                    this.showSystemMessage(
+                        this.state.currentLanguage === 'ru'
+                            ? `Ошибка выполнения: ${error.message}`
+                            : `Execution error: ${error.message}`,
+                        'error'
+                    );
+                }
+            }
+
+            runJavaScriptCode(code) {
+                try {
+                    const result = eval(code);
+                    this.showSystemMessage(
+                        this.state.currentLanguage === 'ru'
+                            ? `Код выполнен успешно. Результат: ${result}`
+                            : `Code executed successfully. Result: ${result}`,
+                        'info'
+                    );
+                } catch (error) {
+                    this.showSystemMessage(
+                        this.state.currentLanguage === 'ru'
+                            ? `Ошибка выполнения JavaScript: ${error.message}`
+                            : `JavaScript execution error: ${error.message}`,
+                        'error'
+                    );
+                }
+            }
+
+            runHTMLCode(code) {
+                try {
+                    const newWindow = window.open();
+                    newWindow.document.write(code);
+                    newWindow.document.close();
+                    
+                    this.showSystemMessage(
+                        this.state.currentLanguage === 'ru'
+                            ? 'HTML код открыт в новом окне'
+                            : 'HTML code opened in new window',
+                        'info'
+                    );
+                } catch (error) {
+                    this.showSystemMessage(
+                        this.state.currentLanguage === 'ru'
+                            ? `Ошибка открытия HTML: ${error.message}`
+                            : `HTML opening error: ${error.message}`,
+                        'error'
+                    );
+                }
+            }
+
+            showCopyNotification() {
+                const message = this.state.currentLanguage === 'ru' 
+                    ? 'Код скопирован в буфер обмена!' 
+                    : 'Code copied to clipboard!';
+                
+                this.elements.copyNotification.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                    ${message}
+                `;
+                
+                this.elements.copyNotification.classList.add('active');
+                setTimeout(() => {
+                    this.elements.copyNotification.classList.remove('active');
+                }, 3000);
+            }
+
+            changeLanguage(langCode) {
+                if (!this.languages[langCode]) return;
+                
+                document.querySelectorAll('.language-button').forEach(button => {
+                    button.classList.toggle('active', button.dataset.lang === langCode);
+                });
+                
+                this.state.currentLanguage = langCode;
+                const langConfig = this.languages[langCode];
+                
+                this.updateUIForLanguage(langConfig);
+                this.showLanguageChangeMessage(langConfig);
+                this.renderChatsList();
+                
+                // Обновляем голос при смене языка
+                this.loadAvailableVoices();
+                
+                console.log(`🌐 Язык изменен на: ${langConfig.name}`);
+            }
+
+            updateUIForLanguage(langConfig) {
+                this.elements.appTitle.textContent = langConfig.ui.title;
+                this.elements.appSubtitle.textContent = langConfig.ui.subtitle;
+                this.elements.messageInput.placeholder = langConfig.ui.inputPlaceholder;
+                
+                if (this.state.connectionChecked) {
+                    const statusKey = this.state.isOnline ? 'online' : 'error';
+                    this.elements.statusText.textContent = langConfig.ui.status[statusKey];
+                }
+            }
+
+            showLanguageChangeMessage(langConfig) {
+                const messages = {
+                    ru: `🌐 Язык изменен на русский. Теперь я буду отвечать на русском языке.`,
+                    en: `🌐 Language switched to English. I will now respond in English.`
+                };
+
+                this.showSystemMessage(messages[langConfig.code], 'info');
+            }
+
+            async performStartupChecks() {
+                const langConfig = this.languages[this.state.currentLanguage];
+                this.updateStatus('checking', langConfig.ui.status.checking);
+                
+                try {
+                    const modelInfo = await this.checkOllamaConnection();
+                    this.showSystemMessage(langConfig.ui.messages.connectionSuccess, 'info');
+                    this.showSystemMessage(
+                        langConfig.ui.messages.modelInfo.replace('{model}', modelInfo),
+                        'info'
+                    );
+                } catch (error) {
+                    this.showSystemMessage(langConfig.ui.messages.connectionError, 'error');
+                    this.showSystemMessage(langConfig.ui.messages.connectionTip, 'info');
+                    
+                    if (this.config.features.autoReconnect) {
+                        this.scheduleReconnection();
+                    }
+                }
+            }
+
+            async checkOllamaConnection() {
+                for (let attempt = 1; attempt <= this.config.ollama.retryAttempts; attempt++) {
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+                        const response = await fetch(
+                            `${this.config.ollama.baseUrl}${this.config.ollama.endpoints.tags}`,
+                            { 
+                                method: 'GET',
+                                signal: controller.signal
+                            }
+                        );
+
+                        clearTimeout(timeoutId);
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.state.isOnline = true;
+                            this.state.connectionChecked = true;
+                            this.state.reconnectAttempts = 0;
+                            
+                            this.state.currentModel = this.selectBestModel(data.models || []);
+                            
+                            const langConfig = this.languages[this.state.currentLanguage];
+                            this.updateStatus('online', langConfig.ui.status.online);
+                            this.setUIState(true);
+                            
+                            return this.state.currentModel;
+                        } else {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                    } catch (error) {
+                        if (attempt === this.config.ollama.retryAttempts) {
+                            throw error;
+                        }
+                        
+                        const langConfig = this.languages[this.state.currentLanguage];
+                        this.updateStatus('error', `${langConfig.ui.status.error} (попытка ${attempt + 1})`);
+                        
+                        await this.delay(this.config.ollama.retryDelay);
+                    }
+                }
+            }
+
+            selectBestModel(availableModels) {
+                const availableModelNames = availableModels.map(m => m.name);
+                
+                for (const preferredModel of this.config.ollama.models) {
+                    if (availableModelNames.includes(preferredModel)) {
+                        return preferredModel;
+                    }
+                }
+                
+                return availableModelNames[0] || this.config.ollama.models[0];
+            }
+
+            scheduleReconnection() {
+                if (this.state.reconnectAttempts >= 5) return;
+                
+                this.state.reconnectAttempts++;
+                const langConfig = this.languages[this.state.currentLanguage];
+                
+                setTimeout(async () => {
+                    this.updateStatus('reconnecting', langConfig.ui.status.reconnecting);
+                    this.showSystemMessage(langConfig.ui.messages.retrying, 'info');
+                    
+                    try {
+                        await this.checkOllamaConnection();
+                    } catch (error) {
+                        this.scheduleReconnection();
+                    }
+                }, Math.min(30000, this.state.reconnectAttempts * 5000));
+            }
+
+            updateStatus(type, text) {
+                this.elements.statusDot.className = 'status-dot';
+                if (type === 'online') this.elements.statusDot.classList.add('online');
+                if (type === 'streaming') this.elements.statusDot.classList.add('streaming');
+                if (type === 'error') this.elements.statusDot.classList.add('error');
+                if (type === 'reconnecting') this.elements.statusDot.classList.add('streaming');
+                
+                this.elements.statusText.textContent = text;
+            }
+
+            async getAIResponse(userMessage, langConfig) {
+                for (let attempt = 1; attempt <= this.config.ollama.retryAttempts; attempt++) {
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), this.config.ollama.timeout);
+
+                        const response = await fetch(
+                            `${this.config.ollama.baseUrl}${this.config.ollama.endpoints.generate}`,
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    model: this.state.currentModel,
+                                    prompt: this.createPrompt(userMessage, langConfig),
+                                    stream: false,
+                                    options: {
+                                        temperature: 0.3,
+                                        top_p: 0.85,
+                                        num_predict: this.config.features.maxTokens,
+                                        repeat_penalty: 1.2,
+                                        top_k: 40
+                                    }
+                                }),
+                                signal: controller.signal
+                            }
+                        );
+
+                        clearTimeout(timeoutId);
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        return data.response;
+                    } catch (error) {
+                        if (attempt === this.config.ollama.retryAttempts) {
+                            throw error;
+                        }
+                        
+                        console.warn(`Попытка ${attempt} не удалась, повтор через ${this.config.ollama.retryDelay}ms`);
+                        await this.delay(this.config.ollama.retryDelay);
+                    }
+                }
+            }
+
+            createPrompt(userMessage, langConfig) {
+                let prompt = langConfig.prompts.system + "\n\n";
+
+                if (this.state.conversationHistory.length > 0) {
+                    prompt += "КОНТЕКСТ РАЗГОВОРА:\n";
+                    const recentHistory = this.state.conversationHistory
+                        .slice(-6)
+                        .map(msg => `${msg.role === 'user' ? 'Пользователь' : 'Ассистент'}: ${msg.content}`)
+                        .join('\n');
+                    prompt += recentHistory + "\n\n";
+                }
+
+                prompt += `СООБЩЕНИЕ ПОЛЬЗОВАТЕЛЯ: "${userMessage}"\n\n`;
+                
+                if (langConfig.code === 'ru') {
+                    prompt += "ОТВЕТЬ НА РУССКОМ ЯЗЫКЕ:";
+                } else {
+                    prompt += "RESPOND IN ENGLISH:";
+                }
+
+                return prompt;
+            }
+
+            processAIResponse(response) {
+                // Улучшенная обработка ответа: исправляем проблему с отображением текста как кода
+                const parts = [];
+                let lastIndex = 0;
+                
+                // Ищем настоящие блоки кода с тройными обратными кавычками
+                const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+                let match;
+                let lastMatchEnd = 0;
+
+                while ((match = codeBlockRegex.exec(response)) !== null) {
+                    // Добавляем текст перед блоком кода
+                    if (match.index > lastMatchEnd) {
+                        const textBefore = response.substring(lastMatchEnd, match.index);
+                        if (textBefore.trim()) {
+                            parts.push({ type: 'text', content: textBefore });
+                        }
+                    }
+
+                    const language = match[1] || 'text';
+                    const code = match[2].trim();
+                    parts.push({ type: 'code', language, code });
+
+                    lastMatchEnd = match.index + match[0].length;
+                }
+
+                // Добавляем оставшийся текст после последнего блока кода
+                if (lastMatchEnd < response.length) {
+                    const textAfter = response.substring(lastMatchEnd);
+                    if (textAfter.trim()) {
+                        parts.push({ type: 'text', content: textAfter });
+                    }
+                }
+
+                // Если не нашли блоков кода, обрабатываем весь текст как обычный текст
+                if (parts.length === 0) {
+                    // Проверяем, не является ли весь ответ ошибочно оформленным "кодом"
+                    if (response.includes('```') || response.includes('`')) {
+                        // Это может быть попытка форматирования, но не настоящий код
+                        // Убираем ошибочные кавычки
+                        const cleanText = response.replace(/```/g, '').replace(/`/g, '');
+                        parts.push({ type: 'text', content: cleanText });
+                    } else {
+                        parts.push({ type: 'text', content: response });
+                    }
+                }
+
+                return parts;
+            }
+
+            async simulateStreamingResponse(fullText, langConfig) {
+                this.state.isStreaming = true;
+                this.updateStatus('streaming', langConfig.ui.status.streaming);
+
+                try {
+                    const streamingData = this.createStreamingMessage();
+                    const processedParts = this.processAIResponse(fullText);
+                    
+                    let displayedContent = '';
+                    
+                    for (const part of processedParts) {
+                        if (part.type === 'text') {
+                            // Форматируем текст, но не разбиваем на части
+                            const formattedText = this.formatText(part.content);
+                            displayedContent += formattedText;
+                        } else if (part.type === 'code') {
+                            const codeBlock = this.createCodeBlock(part.code, part.language);
+                            displayedContent += codeBlock.outerHTML;
+                        }
+                        
+                        this.updateStreamingMessage(streamingData, displayedContent);
+                        await this.delay(50);
+                    }
+
+                    this.finalizeStreamingMessage(streamingData, fullText, langConfig);
+                    
+                } catch (error) {
+                    console.error('Ошибка стриминга:', error);
+                    this.addBotMessage(fullText, langConfig);
+                } finally {
+                    this.state.isStreaming = false;
+                    this.updateStatus('online', langConfig.ui.status.online);
+                }
+            }
+
+            formatText(text) {
+                // Безопасное форматирование текста без разбивки на части
+                return text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+                    .replace(/\n/g, '<br>');
+            }
+
+            createStreamingMessage() {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message streaming-message';
+                
+                const messageText = document.createElement('div');
+                messageText.className = 'message-text';
+                messageText.innerHTML = '<span class="streaming-cursor"></span>';
+                
+                const messageTime = document.createElement('div');
+                messageTime.className = 'message-time';
+                messageTime.textContent = this.getCurrentTime();
+                
+                messageDiv.appendChild(messageText);
+                messageDiv.appendChild(messageTime);
+                this.elements.chatMessages.appendChild(messageDiv);
+                
+                this.scrollToBottom();
+                
+                return {
+                    element: messageDiv,
+                    textElement: messageText
+                };
+            }
+
+            updateStreamingMessage(streamingData, text) {
+                if (streamingData.textElement) {
+                    streamingData.textElement.innerHTML = text + '<span class="streaming-cursor"></span>';
+                    this.scrollToBottom();
+                }
+            }
+
+            finalizeStreamingMessage(streamingData, fullText, langConfig) {
+                if (streamingData.element && streamingData.textElement) {
+                    streamingData.element.className = 'message bot-message';
+                    
+                    const processedParts = this.processAIResponse(fullText);
+                    streamingData.textElement.innerHTML = '';
+                    
+                    processedParts.forEach(part => {
+                        if (part.type === 'text') {
+                            const textDiv = document.createElement('div');
+                            textDiv.innerHTML = this.formatText(part.content);
+                            streamingData.textElement.appendChild(textDiv);
+                        } else if (part.type === 'code') {
+                            const codeBlock = this.createCodeBlock(part.code, part.language);
+                            streamingData.textElement.appendChild(codeBlock);
+                        }
+                    });
+                    
+                    // Добавляем кнопки озвучки
+                    this.addVoiceControls(streamingData.element, fullText);
+                    
+                    this.updateConversationHistory('assistant', fullText);
+                    
+                    // Автоматически озвучиваем ответ
+                    if (this.state.voiceSettings.enabled) {
+                        this.speakText(fullText);
+                    }
+                }
+            }
+
+            addVoiceControls(messageElement, text) {
+                if (!this.state.speechSynthesis) return;
+                
+                const controlsDiv = document.createElement('div');
+                controlsDiv.className = 'voice-controls';
+                
+                const speakButton = document.createElement('button');
+                speakButton.className = 'voice-btn';
+                speakButton.dataset.action = 'speak';
+                speakButton.innerHTML = '<i class="fas fa-volume-up"></i> Озвучить';
+                speakButton.title = 'Озвучить ответ';
+                
+                const stopButton = document.createElement('button');
+                stopButton.className = 'voice-btn';
+                stopButton.dataset.action = 'stop';
+                stopButton.innerHTML = '<i class="fas fa-stop"></i> Остановить';
+                stopButton.title = 'Остановить озвучку';
+                stopButton.disabled = !this.state.isSpeaking;
+                
+                const toggleButton = document.createElement('button');
+                toggleButton.className = `voice-btn ${this.state.voiceSettings.enabled ? 'active' : ''}`;
+                toggleButton.dataset.action = 'toggle';
+                toggleButton.innerHTML = this.state.voiceSettings.enabled ? 
+                    '<i class="fas fa-bell-slash"></i> Выкл. звук' : 
+                    '<i class="fas fa-bell"></i> Вкл. звук';
+                toggleButton.title = 'Включить/выключить автоматическую озвучку';
+                
+                controlsDiv.appendChild(speakButton);
+                controlsDiv.appendChild(stopButton);
+                controlsDiv.appendChild(toggleButton);
+                
+                // Вставляем кнопки после текста сообщения
+                const messageTime = messageElement.querySelector('.message-time');
+                if (messageTime) {
+                    messageElement.insertBefore(controlsDiv, messageTime);
+                } else {
+                    messageElement.appendChild(controlsDiv);
+                }
+            }
+
+            addUserMessage(text, saveToHistory = true) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message user-message';
+                messageDiv.innerHTML = `
+                    <div class="message-text">${this.escapeHtml(text)}</div>
+                    <div class="message-time">${this.getCurrentTime()}</div>
+                `;
+                
+                this.elements.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+                this.state.messageCount++;
+                
+                if (saveToHistory) {
+                    this.updateConversationHistory('user', text);
+                }
+            }
+
+            addBotMessage(text, langConfig, saveToHistory = true) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot-message';
+                
+                const messageText = document.createElement('div');
+                messageText.className = 'message-text';
+                
+                const processedParts = this.processAIResponse(text);
+                processedParts.forEach(part => {
+                    if (part.type === 'text') {
+                        const textDiv = document.createElement('div');
+                        textDiv.innerHTML = this.formatText(part.content);
+                        messageText.appendChild(textDiv);
+                    } else if (part.type === 'code') {
+                        const codeBlock = this.createCodeBlock(part.code, part.language);
+                        messageText.appendChild(codeBlock);
+                    }
+                });
+                
+                const messageTime = document.createElement('div');
+                messageTime.className = 'message-time';
+                messageTime.textContent = this.getCurrentTime();
+                
+                messageDiv.appendChild(messageText);
+                messageDiv.appendChild(messageTime);
+                
+                // Добавляем кнопки озвучки
+                this.addVoiceControls(messageDiv, text);
+                
+                this.elements.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+                
+                if (saveToHistory) {
+                    this.updateConversationHistory('assistant', text);
+                }
+                
+                // Автоматически озвучиваем ответ
+                if (this.state.voiceSettings.enabled) {
+                    this.speakText(text);
+                }
+            }
+
+            updateConversationHistory(role, content) {
+                this.state.conversationHistory.push({ role, content });
+                
+                if (this.state.conversationHistory.length > this.config.features.messageHistory) {
+                    this.state.conversationHistory = this.state.conversationHistory.slice(-this.config.features.messageHistory);
+                }
+            }
+
+            showSystemMessage(text, type = 'info') {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message bot-message ${type}-message`;
+                messageDiv.innerHTML = `
+                    <div class="message-text">${this.escapeHtml(text)}</div>
+                    <div class="message-time">${this.getCurrentTime()}</div>
+                `;
+                
+                this.elements.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            setUIState(enabled) {
+                const langConfig = this.languages[this.state.currentLanguage];
+                
+                this.elements.sendButton.disabled = !enabled || !this.state.isOnline;
+                this.elements.messageInput.disabled = !enabled || !this.state.isOnline;
+                this.elements.messageInput.placeholder = enabled && this.state.isOnline
+                    ? langConfig.ui.inputPlaceholder
+                    : this.state.isOnline 
+                        ? langConfig.ui.status.streaming
+                        : langConfig.ui.messages.noConnection;
+                
+                if (enabled && this.state.isOnline) {
+                    this.elements.messageInput.focus();
+                }
+            }
+
+            stopStreaming() {
+                this.state.isStreaming = false;
+                const langConfig = this.languages[this.state.currentLanguage];
+                this.updateStatus('online', langConfig.ui.status.online);
+                this.setUIState(true);
+            }
+
+            scrollToBottom() {
+                requestAnimationFrame(() => {
+                    this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+                });
+            }
+
+            getCurrentTime() {
+                return new Date().toLocaleTimeString('ru-RU', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        window.addEventListener('beforeunload', () => {
+            if (window.atomChat) {
+                window.atomChat.stopSpeaking();
+                if (window.atomChat.state.isStreaming) {
+                    window.atomChat.stopStreaming();
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.atomChat = new AtomChat();
+        });
+
+        if (!AbortSignal.timeout) {
+            AbortSignal.timeout = function(ms) {
+                const controller = new AbortController();
+                setTimeout(() => controller.abort(), ms);
+                return controller.signal;
+            };
+        }
+    </script>
+</body>
+</html>
